@@ -9,6 +9,8 @@ import { ToolbarButton } from '@jupyterlab/apputils';
 
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 
+
+
 import {
   NotebookActions,
   NotebookPanel,
@@ -58,6 +60,42 @@ export class ButtonExtension
   }
 }
 
+
+// add new change experiments
+export class ButtonExtension2
+  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
+{
+  /**
+   * Create a new extension for the notebook panel widget.
+   *
+   * @param panel Notebook panel
+   * @param context Notebook context
+   * @returns Disposable on the added button
+   */
+  createNew(
+    panel: NotebookPanel,
+    context: DocumentRegistry.IContext<INotebookModel>
+  ): IDisposable {
+    const genSlide = () => {
+      NotebookActions.clearAllOutputs(panel.content);
+    };
+    const button = new ToolbarButton({
+      className: 'slide-gen-buutton',
+      label: 'Generate Slide',
+      onClick: genSlide,
+      tooltip: 'Generate Slide',
+    });
+
+    panel.toolbar.insertItem(11, 'genSlide', button);
+    return new DisposableDelegate(() => {
+      button.dispose();
+    });
+  }
+}
+
+
+
+
 /**
  * Activate the extension.
  *
@@ -65,9 +103,15 @@ export class ButtonExtension
  */
 function activate(app: JupyterFrontEnd): void {
   app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension());
+  app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension2());
 }
 
 /**
  * Export the plugin as default.
  */
 export default plugin;
+
+
+
+
+
