@@ -13,6 +13,18 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { ExamplePanel } from './panel';
 
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+
+import { IDisposable, DisposableDelegate } from '@lumino/disposable';
+
+import { ToolbarButton } from '@jupyterlab/apputils';
+
+import {
+  NotebookActions,
+  NotebookPanel,
+  INotebookModel,
+} from '@jupyterlab/notebook';
+
 /**
  * The command IDs used by the console plugin.
  */
@@ -108,6 +120,53 @@ function activate(
       category: category,
     });
   }
+
+  app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension2());
+}
+const plugin: JupyterFrontEndPlugin<void> = {
+  activate,
+  id: 'toolbar-button',
+  autoStart: true,
+};
+
+// add new change experiments
+export class ButtonExtension2
+  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
+{
+  /**
+   * Create a new extension for the notebook panel widget.
+   *
+   * @param panel Notebook panel
+   * @param context Notebook context
+   * @returns Disposable on the added button
+   */
+  createNew(
+    panel: NotebookPanel,
+    context: DocumentRegistry.IContext<INotebookModel>
+  ): IDisposable {
+    const genSlide = () => {
+      NotebookActions.clearAllOutputs(panel.content);
+    };
+    const button = new ToolbarButton({
+      className: 'slide-gen-buutton',
+      label: 'Generate Slide',
+      onClick: genSlide,
+      tooltip: 'Generate Slide',
+    });
+
+    panel.toolbar.insertItem(11, 'genSlide', button);
+    return new DisposableDelegate(() => {
+      button.dispose();
+    });
+  }
 }
 
+
+
+
+
+
 export default extension;
+export {plugin};
+
+
