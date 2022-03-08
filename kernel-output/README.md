@@ -58,7 +58,7 @@ this._sessionContext = new SessionContext({
   name: 'Kernel Output',
 });
 ```
-
+ß
 The private session variable is exposed as read-only for other users
 through a getter method:
 

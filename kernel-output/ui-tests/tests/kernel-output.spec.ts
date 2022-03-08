@@ -46,10 +46,10 @@ test('should open a panel connected to a notebook kernel', async ({ page }) => {
   await page.click('ul[role="menu"] >> text=Run Selected Cells');
 
   // Click text=Kernel Output
-  await page.click('text=Kernel Output');
+  await page.click('text=Presentation Kernel');
 
   // Click ul[role="menu"] >> text=Open the Kernel Output Panel
-  await page.click('ul[role="menu"] >> text=Open the Kernel Output Panel');
+  await page.click('ul[role="menu"] >> text=Open the Presentation Kernel Output Panel');
 
   // Select Notebook kernel
   await page.selectOption('.jp-Dialog-body >> select', {
