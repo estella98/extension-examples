@@ -20,7 +20,7 @@ import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 import { ToolbarButton } from '@jupyterlab/apputils';
 
 import {
-  NotebookActions,
+  //NotebookActions,
   NotebookPanel,
   INotebookModel,
 } from '@jupyterlab/notebook';
@@ -41,7 +41,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: 'kernel-output',
   autoStart: true,
   optional: [ILauncher],
-  requires: [ICommandPalette, IRenderMimeRegistry, ITranslator],
+  requires: [ICommandPalette, IRenderMimeRegistry, ITranslator, INotebookTracker],
   activate: activate,
 };
 
@@ -54,6 +54,7 @@ const extension: JupyterFrontEndPlugin<void> = {
  * @param palette Jupyter Commands Palette
  * @param rendermime Jupyter Render Mime Registry
  * @param translator Jupyter Translator
+ * @param notebookTracker notebookTracker
  * @param launcher [optional] Jupyter Launcher
  */
 function activate(
@@ -61,7 +62,8 @@ function activate(
   palette: ICommandPalette,
   rendermime: IRenderMimeRegistry,
   translator: ITranslator,
-  launcher: ILauncher | null
+  notebookTracker: INotebookTracker,
+  launcher: ILauncher | null,
 ): void {
   const manager = app.serviceManager;
   const { commands, shell } = app;
@@ -76,7 +78,7 @@ function activate(
    * @returns The panel
    */
   async function createPanel(): Promise<ExamplePanel> {
-    panel = new ExamplePanel(manager, rendermime, translator);
+    panel = new ExamplePanel(app, notebookTracker,manager, rendermime, translator);
     shell.add(panel, 'main');
     return panel;
   }
@@ -123,8 +125,9 @@ function activate(
     });
   }
 
-  app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension2(app, palette,rendermime, translator,launcher));
+  app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension2(app, palette,rendermime, translator, notebookTracker, launcher));
 }
+
 const plugin: JupyterFrontEndPlugin<void> = {
   activate,
   id: 'toolbar-button',
@@ -144,20 +147,24 @@ export class ButtonExtension2
    */
   app:JupyterFrontEnd = null;
   palette: ICommandPalette = null;
-    rendermime: IRenderMimeRegistry = null;
-    translator: ITranslator = null;
-    launcher: ILauncher | null
-
+  rendermime: IRenderMimeRegistry = null;
+  translator: ITranslator = null;
+  notebookTracker:INotebookTracker;
+  launcher: ILauncher | null;
+ 
   constructor( app: JupyterFrontEnd,
     palette: ICommandPalette,
     rendermime: IRenderMimeRegistry,
     translator: ITranslator,
-    launcher: ILauncher | null){
+    notebookTracker:INotebookTracker,
+    launcher: ILauncher | null,
+  ){
       this.app = app;
       this.palette = palette;
       this.rendermime = rendermime;
       this.translator = translator;
       this.launcher = launcher
+      this.notebookTracker = notebookTracker
     }
 
   createNew(
@@ -166,20 +173,20 @@ export class ButtonExtension2
   ): IDisposable {
     const genSlide = () => {
       console.log(panel.content)
-      NotebookActions.clearAllOutputs(panel.content)
+      //NotebookActions.clearAllOutputs(panel.content)
       // NotebookActions.runAndAdvance(panel.content).then((test) => {
       //   NotebookActions.showAllOutputs(panel.content)
       //   console.log(test)
       // });
-      
-     
-
+      //activateCopyOutput(this.app, this.notebookTracker)
+     // open the presentation panel
       let new_panel: ExamplePanel;
       const { shell } = this.app;
       let manager = this.app.serviceManager
-      new_panel = new ExamplePanel(manager, this.rendermime, this.translator);
+      new_panel = new ExamplePanel(this.app, this.notebookTracker,manager, this.rendermime, this.translator);
       shell.add(new_panel, 'main');
       return new_panel;
+
     };
 
 
@@ -210,9 +217,28 @@ function activateCopyOutput(
   app: JupyterFrontEnd,
   notebookTracker: INotebookTracker
 ){
-  notebookTracker.widgetAdded.connect((tracker, panel) => {
+  console.log("activate Copy Output is called")
+  if (notebookTracker.activeCell){
+    let codeCell = notebookTracker.activeCell.model as ICodeCellModel;
+    console.log(codeCell)
+    let outputs = codeCell.outputs
+    console.log(outputs)
+    for (let i = 0; i < outputs.length; i++) {
+      // IOutputModel
+      const outputModel = outputs.get(i);
+      const outputData = outputModel.data
+      console.log('\t\tdata is', outputData);
+      // also has `outputModel.executionCount` and `outputModel.metadata`
+  }
+  }
+
+  notebookTracker.widgetUpdated.connect((tracker, panel) => {
+    console.log("widget is updated")
+    console.log(panel.model.cells)
     let notebook = panel.content;
     const notebookModel = notebook.model;
+    console.log("notebook model is")
+    console.log(notebookModel)
     notebookModel.cells.changed.connect((_, change) => {
         if (change.type != 'add') {
             return;
@@ -224,6 +250,8 @@ function activateCopyOutput(
             }
             // IOutputAreaModel
             let outputs = (cellModel as ICodeCellModel).outputs;
+            console.log("outputs are")
+            console.log(outputs)
             if (!outputs) {
                 continue;
             }

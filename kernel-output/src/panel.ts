@@ -4,8 +4,11 @@ import {
 
 } from '@jupyterlab/apputils';
 import { Widget } from '@lumino/widgets';
-
-
+import {
+  JupyterFrontEnd
+} from '@jupyterlab/application';
+import {ICodeCellModel} from '@jupyterlab/cells'
+import {INotebookTracker} from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import {  ServiceManager } from '@jupyterlab/services';
@@ -20,6 +23,7 @@ import { Message } from '@lumino/messaging';
 
 import { StackedPanel } from '@lumino/widgets';
 
+
 /**
  * The class name added to the example panel.
  */
@@ -30,6 +34,8 @@ const PANEL_CLASS = 'jp-RovaPanel';
  */
 export class ExamplePanel extends StackedPanel {
   constructor(
+    app: JupyterFrontEnd,
+    tracker: INotebookTracker,
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
     translator?: ITranslator
@@ -44,7 +50,9 @@ export class ExamplePanel extends StackedPanel {
   
   
     this._content = new Widget()
-    this.generate_Content(this._content)
+    this.generate_Content(this._content, app, tracker)
+    
+
     
     this._outputarea =  new MainAreaWidget({content: this._content});
     this.addWidget(this._outputarea);
@@ -60,8 +68,34 @@ export class ExamplePanel extends StackedPanel {
     this._sessionContext.dispose();
     super.dispose();
   }
+  
+  async activateCopyOutput(
+    app: JupyterFrontEnd,
+    notebookTracker: INotebookTracker
+  ){
+    let outputData = null;
+    console.log("activate Copy Output is called")
+    if (notebookTracker.activeCell){
+      let codeCell = notebookTracker.activeCell.model as ICodeCellModel;
+      console.log(codeCell)
+      let outputs = codeCell.outputs
+      console.log(outputs)
+      for (let i = 0; i < outputs.length; i++) {
+        // IOutputModel
+        const outputModel = outputs.get(i);
+        console.log("\t\traw ", outputModel.data)
+        outputData =  outputs.get(i).toJSON().data as any;
+        outputData = outputData['text/html']
+        console.log("89")
+        console.log(outputData)
+    }
+    }
+    return outputData
+  }
 
-  async generate_Content(content:Widget):Promise<void>{
+
+  async generate_Content(content:Widget,  app: JupyterFrontEnd,
+    notebookTracker: INotebookTracker):Promise<void>{
 
     interface APODResponse {
       copyright: string;
@@ -72,9 +106,13 @@ export class ExamplePanel extends StackedPanel {
       url: string;
     };
     
+    // add title
+    let title = document.createElement('textarea');
+    title.defaultValue = "TITLE";
+    content.node.appendChild(title);
     // Add an image element to the content
-    let img = document.createElement('img');
-    content.node.appendChild(img);
+    //let img = document.createElement('img');
+    //content.node.appendChild(img);
 
     // Get a random date string in YYYY-MM-DD format
     function randomDate() {
@@ -86,16 +124,20 @@ export class ExamplePanel extends StackedPanel {
 
     // Fetch info about a random picture
     const response = await fetch(`https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date=${randomDate()}`);
-    const data = await response.json() as APODResponse;
+    //const backgroundImg = await response.json() as APODResponse;
 
-    if (data.media_type === 'image') {
-      // Populate the image
-      img.src = data.url;
-      img.title = data.title;
-    } else {
-      console.log('Random APOD was not a picture.');
-    }
-
+    // if (backgroundImg.media_type === 'image') {
+    //   // Populate the image
+    //   img.src = backgroundImg.url;
+    //   img.title = backgroundImg.title;
+    // } else {
+    //   console.log('Random APOD was not a picture.');
+    // }
+    let codeOutput = await this.activateCopyOutput(app, notebookTracker )
+    console.log(codeOutput)
+    let divElem= document.createElement('div');
+    content.node.appendChild(divElem)
+    divElem.innerHTML = codeOutput
   }
 
   // execute(code: string): void {
