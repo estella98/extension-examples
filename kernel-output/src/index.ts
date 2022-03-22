@@ -8,9 +8,9 @@ import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 
 import { ITranslator } from '@jupyterlab/translation';
-import {INotebookTracker} from '@jupyterlab/notebook'
+import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import {ICodeCellModel} from '@jupyterlab/cells'
+import { ICodeCellModel } from '@jupyterlab/cells';
 import { ExamplePanel } from './panel';
 
 import { DocumentRegistry } from '@jupyterlab/docregistry';
@@ -41,11 +41,14 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: 'kernel-output',
   autoStart: true,
   optional: [ILauncher],
-  requires: [ICommandPalette, IRenderMimeRegistry, ITranslator, INotebookTracker],
+  requires: [
+    ICommandPalette,
+    IRenderMimeRegistry,
+    ITranslator,
+    INotebookTracker,
+  ],
   activate: activate,
 };
-
-
 
 /**
  * Activate the JupyterLab extension.
@@ -63,7 +66,7 @@ function activate(
   rendermime: IRenderMimeRegistry,
   translator: ITranslator,
   notebookTracker: INotebookTracker,
-  launcher: ILauncher | null,
+  launcher: ILauncher | null
 ): void {
   const manager = app.serviceManager;
   const { commands, shell } = app;
@@ -78,7 +81,13 @@ function activate(
    * @returns The panel
    */
   async function createPanel(): Promise<ExamplePanel> {
-    panel = new ExamplePanel(app, notebookTracker,manager, rendermime, translator);
+    panel = new ExamplePanel(
+      app,
+      notebookTracker,
+      manager,
+      rendermime,
+      translator
+    );
     shell.add(panel, 'main');
     return panel;
   }
@@ -125,7 +134,17 @@ function activate(
     });
   }
 
-  app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension2(app, palette,rendermime, translator, notebookTracker, launcher));
+  app.docRegistry.addWidgetExtension(
+    'Notebook',
+    new ButtonExtension2(
+      app,
+      palette,
+      rendermime,
+      translator,
+      notebookTracker,
+      launcher
+    )
+  );
 }
 
 const plugin: JupyterFrontEndPlugin<void> = {
@@ -136,8 +155,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
 // add new change experiments
 export class ButtonExtension2
-  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
-{
+  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel> {
   /**
    * Create a new extension for the notebook panel widget.
    
@@ -145,53 +163,51 @@ export class ButtonExtension2
    * @param context Notebook context
    * @returns Disposable on the added button
    */
-  app:JupyterFrontEnd = null;
+  app: JupyterFrontEnd = null;
   palette: ICommandPalette = null;
   rendermime: IRenderMimeRegistry = null;
   translator: ITranslator = null;
-  notebookTracker:INotebookTracker;
+  notebookTracker: INotebookTracker;
   launcher: ILauncher | null;
- 
-  constructor( app: JupyterFrontEnd,
+
+  constructor(
+    app: JupyterFrontEnd,
     palette: ICommandPalette,
     rendermime: IRenderMimeRegistry,
     translator: ITranslator,
-    notebookTracker:INotebookTracker,
-    launcher: ILauncher | null,
-  ){
-      this.app = app;
-      this.palette = palette;
-      this.rendermime = rendermime;
-      this.translator = translator;
-      this.launcher = launcher
-      this.notebookTracker = notebookTracker
-    }
+    notebookTracker: INotebookTracker,
+    launcher: ILauncher | null
+  ) {
+    this.app = app;
+    this.palette = palette;
+    this.rendermime = rendermime;
+    this.translator = translator;
+    this.launcher = launcher;
+    this.notebookTracker = notebookTracker;
+  }
 
   createNew(
     panel: NotebookPanel,
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
     const genSlide = () => {
-      console.log(panel.content)
-      //NotebookActions.clearAllOutputs(panel.content)
-      // NotebookActions.runAndAdvance(panel.content).then((test) => {
-      //   NotebookActions.showAllOutputs(panel.content)
-      //   console.log(test)
-      // });
-      //activateCopyOutput(this.app, this.notebookTracker)
-     // open the presentation panel
+      console.log(panel.content);
       let new_panel: ExamplePanel;
       const { shell } = this.app;
-      let manager = this.app.serviceManager
-      new_panel = new ExamplePanel(this.app, this.notebookTracker,manager, this.rendermime, this.translator);
+      let manager = this.app.serviceManager;
+      new_panel = new ExamplePanel(
+        this.app,
+        this.notebookTracker,
+        manager,
+        this.rendermime,
+        this.translator
+      );
       shell.add(new_panel, 'main');
       return new_panel;
-
     };
 
-
     const button = new ToolbarButton({
-      className: 'slide-gen-buutton',
+      className: 'slide-gen-button',
       label: 'Generate Slide',
       onClick: genSlide,
       tooltip: 'Generate Slide',
@@ -204,79 +220,75 @@ export class ButtonExtension2
   }
 }
 
-
-
 const copyOutputPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/notebook-extension:copy-output',
   activate: activateCopyOutput,
   requires: [ITranslator, INotebookTracker],
-  autoStart: true
+  autoStart: true,
 };
 
 function activateCopyOutput(
   app: JupyterFrontEnd,
   notebookTracker: INotebookTracker
-){
-  console.log("activate Copy Output is called")
-  if (notebookTracker.activeCell){
+) {
+  console.log('activate Copy Output is called');
+  if (notebookTracker.activeCell) {
     let codeCell = notebookTracker.activeCell.model as ICodeCellModel;
-    console.log(codeCell)
-    let outputs = codeCell.outputs
-    console.log(outputs)
+    console.log(codeCell);
+    let outputs = codeCell.outputs;
+    console.log(outputs);
     for (let i = 0; i < outputs.length; i++) {
       // IOutputModel
       const outputModel = outputs.get(i);
-      const outputData = outputModel.data
+      const outputData = outputModel.data;
       console.log('\t\tdata is', outputData);
       // also has `outputModel.executionCount` and `outputModel.metadata`
-  }
+    }
   }
 
   notebookTracker.widgetUpdated.connect((tracker, panel) => {
-    console.log("widget is updated")
-    console.log(panel.model.cells)
+    console.log('widget is updated');
+    console.log(panel.model.cells);
     let notebook = panel.content;
     const notebookModel = notebook.model;
-    console.log("notebook model is")
-    console.log(notebookModel)
+    console.log('notebook model is');
+    console.log(notebookModel);
     notebookModel.cells.changed.connect((_, change) => {
-        if (change.type != 'add') {
-            return;
+      if (change.type != 'add') {
+        return;
+      }
+      for (const cellModel of change.newValues) {
+        // ensure we have CodeCellModel
+        if (cellModel.type != 'code') {
+          return;
         }
-        for (const cellModel of change.newValues) {
-            // ensure we have CodeCellModel
-            if (cellModel.type != 'code') {
-                return;
-            }
-            // IOutputAreaModel
-            let outputs = (cellModel as ICodeCellModel).outputs;
-            console.log("outputs are")
-            console.log(outputs)
-            if (!outputs) {
-                continue;
-            }
-            outputs.changed.connect(() => {
-                console.log('Outputs of the cell', cellModel.id, 'in', notebook.title.label, 'changed:');
-                console.log(
-                    '\tThere are now', outputs.length, 'outputs:'
-                );
-                for (let i = 0; i < outputs.length; i++) {
-                    // IOutputModel
-                    const outputModel = outputs.get(i);
-                    console.log('\t\t', outputModel.data);
-                    // also has `outputModel.executionCount` and `outputModel.metadata`
-                }
-            });
+        // IOutputAreaModel
+        let outputs = (cellModel as ICodeCellModel).outputs;
+        console.log('outputs are');
+        console.log(outputs);
+        if (!outputs) {
+          continue;
         }
+        outputs.changed.connect(() => {
+          console.log(
+            'Outputs of the cell',
+            cellModel.id,
+            'in',
+            notebook.title.label,
+            'changed:'
+          );
+          console.log('\tThere are now', outputs.length, 'outputs:');
+          for (let i = 0; i < outputs.length; i++) {
+            // IOutputModel
+            const outputModel = outputs.get(i);
+            console.log('\t\t', outputModel.data);
+            // also has `outputModel.executionCount` and `outputModel.metadata`
+          }
+        });
+      }
     });
-})
+  });
 }
 
-
-
-
-
 export default extension;
-export {plugin, copyOutputPlugin};
-
-
+export { plugin, copyOutputPlugin };
