@@ -48,7 +48,7 @@ export class KernelView extends ReactWidget {
     console.log('67', title);
     return (
       <React.Fragment>
-        <body>
+        <body className="mainPanel">
           <div className="body1">{title}</div>
           <div className="body2">{output}</div>
           <div className="body3">{title}</div>
