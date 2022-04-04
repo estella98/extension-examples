@@ -17,6 +17,7 @@ import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 
 import { ToolbarButton } from '@jupyterlab/apputils';
+import { footerButtonExtension, cellFactory } from './footer_button';
 
 import {
   //NotebookActions,
@@ -139,4 +140,11 @@ export class ButtonExtension2
   }
 }
 
-export default extension;
+// export default extension;
+const plugins: Array<JupyterFrontEndPlugin<any>> = [
+  footerButtonExtension,
+  cellFactory,
+  extension,
+];
+
+export default plugins;
