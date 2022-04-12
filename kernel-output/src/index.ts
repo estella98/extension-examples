@@ -18,7 +18,7 @@ import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 
 import { ToolbarButton } from '@jupyterlab/apputils';
 import { footerButtonExtension, cellFactory } from './footer_button';
-
+import { NodeModel } from './node_model';
 import {
   //NotebookActions,
   NotebookPanel,
@@ -28,6 +28,10 @@ import {
 /**
  * Initialization data for the extension.
  */
+
+// declare global instance of nodeModel( BackEnd)
+export const model = new NodeModel();
+
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'kernel-output',
   autoStart: true,
@@ -89,6 +93,7 @@ export class ButtonExtension2
   translator: ITranslator = null;
   notebookTracker: INotebookTracker;
   launcher: ILauncher | null;
+  model: NodeModel;
 
   constructor(
     app: JupyterFrontEnd,

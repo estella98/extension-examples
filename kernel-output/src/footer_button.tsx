@@ -13,6 +13,7 @@ import {
 import { CommandRegistry } from '@lumino/commands';
 import * as React from 'react';
 import { IEditorServices } from '@jupyterlab/codeeditor';
+import { model } from './index';
 
 /**
  * The CSS classes added to the cell footer.
@@ -52,13 +53,15 @@ function activateCommands(
       label: 'Run Cell',
       execute: (args) => {
         const current = getCurrent(args);
-        console.log('51', current);
+
         if (current) {
           const { context, content } = current;
           // when select first run the code to make sure the output is ready to go
           NotebookActions.run(content, context.sessionContext);
           // keep track of the node reference
-
+          console.log('63', content.activeCell);
+          model.selectCell(content.activeCell);
+          console.log('64 model cell widget', model);
           // current.content.mode = 'edit';
         }
       },
@@ -81,11 +84,34 @@ export class ContentFactoryWithFooterButton extends NotebookPanel.ContentFactory
    * Create a new cell header for the parent widget.
    */
   createCellFooter(): ICellFooter {
+    console.log('footer added');
     return new CellFooterWithButton(this.commands);
   }
 
   private readonly commands: CommandRegistry;
 }
+
+const DummyButton: React.FC<{ onCustomClick: any }> = ({ onCustomClick }) => {
+  const [selected, setSelected] = React.useState(false);
+
+  return (
+    <div className={CELL_FOOTER_DIV_CLASS}>
+      <button
+        className={CELL_FOOTER_BUTTON_CLASS}
+        onClick={() => {
+          onCustomClick();
+          setSelected(!selected);
+        }}
+        style={{
+          backgroundColor: selected ? 'pink' : 'yellow',
+          marginLeft: 'auto',
+        }}
+      >
+        {selected ? 'Deselect' : 'Select'}
+      </button>
+    </div>
+  );
+};
 
 /**
  * Extend default implementation of a cell footer.
@@ -94,6 +120,7 @@ export class CellFooterWithButton extends ReactWidget implements ICellFooter {
   /**
    * Construct a new cell footer.
    */
+
   constructor(commands: CommandRegistry) {
     super();
     this.addClass(CELL_FOOTER_CLASS);
@@ -105,14 +132,11 @@ export class CellFooterWithButton extends ReactWidget implements ICellFooter {
   render() {
     return (
       <div className={CELL_FOOTER_DIV_CLASS}>
-        <button
-          className={CELL_FOOTER_BUTTON_CLASS}
-          onClick={(event) => {
+        <DummyButton
+          onCustomClick={() => {
             this.commands.execute('run-selected-codecell');
           }}
-        >
-          select
-        </button>
+        />
       </div>
     );
   }
