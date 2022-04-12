@@ -70,13 +70,18 @@ export class KernelView extends ReactWidget {
       presentDict.raw == 0
     ) {
       this.presentMode = 'p1';
-    }
-    if (
+    } else if (
       presentDict.code == 1 &&
       presentDict.markdown == 1 &&
       presentDict.raw == 0
     ) {
       this.presentMode = 'p2';
+    } else if (
+      presentDict.code == 2 &&
+      presentDict.markdown == 0 &&
+      presentDict.raw == 0
+    ) {
+      this.presentMode = 'p3';
     }
   }
 
@@ -128,6 +133,36 @@ export class KernelView extends ReactWidget {
                   <div
                     dangerouslySetInnerHTML={{
                       __html: this.markDownOutput[0].node.innerHTML,
+                    }}
+                  />
+                }
+              </div>
+            </div>
+          </body>
+        </React.Fragment>
+      );
+    } else if (this.presentMode == 'p3') {
+      console.log('146', this.codeOutput[0].node);
+      console.log('147', this.codeOutput[1].node);
+      return (
+        <React.Fragment>
+          <body className="mainPanel">
+            <div className="body1">{title}</div>
+            <div className="horizontalGroup">
+              <div className="body2">
+                {
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: this.codeOutput[0].node.innerHTML,
+                    }}
+                  />
+                }
+              </div>
+              <div className="body3">
+                {
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: this.codeOutput[1].node.innerHTML,
                     }}
                   />
                 }
